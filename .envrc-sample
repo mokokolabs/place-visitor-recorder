@@ -1,0 +1,6 @@
+export API_ROOT=http://localhost:3000
+export API_KEY=""
+export GOOS=linux
+export GOARCH=arm
+export GOARM=5
+export CGO_ENABLED=0
