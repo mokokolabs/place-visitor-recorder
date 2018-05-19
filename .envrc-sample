@@ -1,3 +1,4 @@
+export DISTANCE_THRESHOLD=100
 export API_ROOT=http://localhost:3000
 export API_KEY=""
 export GOOS=linux

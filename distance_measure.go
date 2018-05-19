@@ -6,15 +6,15 @@ import (
 	"github.com/kidoman/embd/sensor/us020"
 )
 
-const echoAPin = "P1_13"
-const triggerAPin = "P1_15"
-const echoBPin = "P1_16"
-const triggerBPin = "P1_18"
+const echoOuterPin = "P1_13"
+const triggerOuterPin = "P1_15"
+const echoInnerPin = "P1_16"
+const triggerInnerPin = "P1_18"
 
 // DistanceMeasure Measure distance with two sensors
 type DistanceMeasure struct {
-	readerA *us020.US020
-	readerB *us020.US020
+	readerOuter *us020.US020
+	readerInner *us020.US020
 }
 
 // InitDistanceMeasure Setup GPIO pins
@@ -23,53 +23,53 @@ func InitDistanceMeasure() DistanceMeasure {
 		panic(err)
 	}
 
-	echoA, err := embd.NewDigitalPin(echoAPin)
+	echoOuter, err := embd.NewDigitalPin(echoOuterPin)
 	if err != nil {
 		panic(err)
 	}
 
-	triggerA, err := embd.NewDigitalPin(triggerAPin)
+	triggerOuter, err := embd.NewDigitalPin(triggerOuterPin)
 	if err != nil {
 		panic(err)
 	}
 
-	echoB, err := embd.NewDigitalPin(echoBPin)
+	echoInner, err := embd.NewDigitalPin(echoInnerPin)
 	if err != nil {
 		panic(err)
 	}
 
-	triggerB, err := embd.NewDigitalPin(triggerBPin)
+	triggerInner, err := embd.NewDigitalPin(triggerInnerPin)
 	if err != nil {
 		panic(err)
 	}
 
-	readerA := us020.New(echoA, triggerA, nil)
-	readerB := us020.New(echoB, triggerB, nil)
+	readerOuter := us020.New(echoOuter, triggerOuter, nil)
+	readerInner := us020.New(echoInner, triggerInner, nil)
 
 	return DistanceMeasure{
-		readerA: readerA,
-		readerB: readerB,
+		readerOuter: readerOuter,
+		readerInner: readerInner,
 	}
 }
 
 // ReadValues reads distance values
-func (dm DistanceMeasure) ReadValues() (distanceA, distanceB float64) {
-	a, err := dm.readerA.Distance()
+func (dm DistanceMeasure) ReadValues() (distanceOuter, distanceInner float64) {
+	outer, err := dm.readerOuter.Distance()
 	if err != nil {
 		panic(err)
 	}
 
-	// b, err := dm.readerB.Distance()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	inner, err := dm.readerInner.Distance()
+	if err != nil {
+		panic(err)
+	}
 
-	return a, 0
+	return outer, inner
 }
 
 // Cleanup everything
 func (dm DistanceMeasure) Cleanup() {
-	defer dm.readerA.Close()
-	defer dm.readerB.Close()
+	defer dm.readerOuter.Close()
+	defer dm.readerInner.Close()
 	defer embd.CloseGPIO()
 }
