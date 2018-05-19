@@ -8,8 +8,8 @@ import (
 
 const echoOuterPin = "P1_13"
 const triggerOuterPin = "P1_15"
-const echoInnerPin = "P1_16"
-const triggerInnerPin = "P1_18"
+const echoInnerPin = "P1_3"
+const triggerInnerPin = "P1_5"
 
 // DistanceMeasure Measure distance with two sensors
 type DistanceMeasure struct {
