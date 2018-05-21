@@ -1,75 +1,81 @@
 package main
 
 import (
-	"github.com/kidoman/embd"
-	_ "github.com/kidoman/embd/host/rpi"
-	"github.com/kidoman/embd/sensor/us020"
+	"time"
+
+	"github.com/stianeikeland/go-rpio"
 )
 
-const echoOuterPin = "P1_13"
-const triggerOuterPin = "P1_15"
-const echoInnerPin = "P1_3"
-const triggerInnerPin = "P1_5"
+const (
+	echoOuterPin    = 21
+	triggerOuterPin = 22
+	echoInnerPin    = 0
+	triggerInnerPin = 1
+)
+
+const (
+	soundSpeed = 331.3 + 0.606*21
+	pulseDelay = 30000 * time.Nanosecond
+)
 
 // DistanceMeasure Measure distance with two sensors
 type DistanceMeasure struct {
-	readerOuter *us020.US020
-	readerInner *us020.US020
+	echoOuter    rpio.Pin
+	triggerOuter rpio.Pin
+	echoInner    rpio.Pin
+	triggerInner rpio.Pin
 }
 
 // InitDistanceMeasure Setup GPIO pins
 func InitDistanceMeasure() DistanceMeasure {
-	if err := embd.InitGPIO(); err != nil {
+	if err := rpio.Open(); err != nil {
 		panic(err)
 	}
 
-	echoOuter, err := embd.NewDigitalPin(echoOuterPin)
-	if err != nil {
-		panic(err)
-	}
-
-	triggerOuter, err := embd.NewDigitalPin(triggerOuterPin)
-	if err != nil {
-		panic(err)
-	}
-
-	echoInner, err := embd.NewDigitalPin(echoInnerPin)
-	if err != nil {
-		panic(err)
-	}
-
-	triggerInner, err := embd.NewDigitalPin(triggerInnerPin)
-	if err != nil {
-		panic(err)
-	}
-
-	readerOuter := us020.New(echoOuter, triggerOuter, nil)
-	readerInner := us020.New(echoInner, triggerInner, nil)
+	echoOuter := rpio.Pin(echoOuterPin)
+	echoOuter.Input()
+	triggerOuter := rpio.Pin(triggerOuterPin)
+	triggerOuter.Output()
+	echoInner := rpio.Pin(echoInnerPin)
+	echoInner.Input()
+	triggerInner := rpio.Pin(triggerInnerPin)
+	triggerInner.Output()
 
 	return DistanceMeasure{
-		readerOuter: readerOuter,
-		readerInner: readerInner,
+		echoOuter:    echoOuter,
+		triggerOuter: triggerOuter,
+		echoInner:    echoInner,
+		triggerInner: triggerInner,
 	}
+}
+
+func (dm DistanceMeasure) read(trigger rpio.Pin, echo rpio.Pin) (value float64) {
+	trigger.High()
+	time.Sleep(pulseDelay)
+	trigger.Low()
+
+	var start time.Time
+	for s := echo.Read(); s == rpio.Low; {
+		start = time.Now()
+	}
+
+	for s := echo.Read(); s == rpio.High; {
+		return float64(time.Since(start).Nanoseconds()) / 10000000 * (soundSpeed / 2)
+	}
+
+	return 0
 }
 
 // ReadValues reads distance values
 func (dm DistanceMeasure) ReadValues() (distanceOuter, distanceInner float64) {
-	outer, err := dm.readerOuter.Distance()
-	if err != nil {
-		panic(err)
-	}
 
-	inner, err := dm.readerInner.Distance()
-	if err != nil {
-		panic(err)
-	}
+	outer := dm.read(dm.triggerOuter, dm.echoOuter)
+	inner := dm.read(dm.triggerInner, dm.echoInner)
 
 	return outer, inner
 }
 
-// Cleanup everything
+// Cleanup pins
 func (dm DistanceMeasure) Cleanup() {
-	defer dm.readerOuter.Close()
-	defer dm.readerInner.Close()
-	defer embd.CloseGPIO()
+	rpio.Close()
 }

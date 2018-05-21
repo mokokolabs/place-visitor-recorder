@@ -78,32 +78,27 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, os.Kill)
 
-	oldOuter, oldInner := distanceThreshold, distanceThreshold
-
 	for {
 		select {
 		default:
-			fmt.Print("\033[H\033[2J")
 			distanceOuter, distanceInner := dm.ReadValues()
-			fmt.Printf("Distance inner is %.2f\n", distanceOuter)
-			fmt.Printf("Distance outer is %.2f\n", distanceInner)
+			// fmt.Printf("Inner: %.2fcm\tOuter: %.2fcm:\n", distanceInner, distanceOuter)
 
-			if distanceOuter <= oldOuter {
+			if distanceOuter <= distanceThreshold {
 				sm.Event("outer-activated")
 			} else {
 				sm.Event("outer-deactivated")
 			}
-			oldOuter = distanceOuter
 
-			if distanceInner <= oldInner {
+			if distanceInner <= distanceThreshold {
 				sm.Event("inner-activated")
 			} else {
 				sm.Event("inner-deactivated")
 			}
-			oldInner = distanceInner
 
 			time.Sleep(100 * time.Millisecond)
 		case <-quit:
+			dm.Cleanup()
 			return
 		}
 	}
