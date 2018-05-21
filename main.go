@@ -82,7 +82,7 @@ func main() {
 		select {
 		default:
 			distanceOuter, distanceInner := dm.ReadValues()
-			// fmt.Printf("Inner: %.2fcm\tOuter: %.2fcm:\n", distanceInner, distanceOuter)
+			// fmt.Printf("Inner: %.2fcm\tOuter: %.2fcm\n", distanceInner, distanceOuter)
 
 			if distanceOuter <= distanceThreshold {
 				sm.Event("outer-activated")

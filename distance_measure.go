@@ -36,10 +36,12 @@ func InitDistanceMeasure() DistanceMeasure {
 	echoOuter.Input()
 	triggerOuter := rpio.Pin(triggerOuterPin)
 	triggerOuter.Output()
+	triggerOuter.Low()
 	echoInner := rpio.Pin(echoInnerPin)
 	echoInner.Input()
 	triggerInner := rpio.Pin(triggerInnerPin)
 	triggerInner.Output()
+	triggerInner.Low()
 
 	return DistanceMeasure{
 		echoOuter:    echoOuter,
@@ -54,16 +56,22 @@ func (dm DistanceMeasure) read(trigger rpio.Pin, echo rpio.Pin) (value float64) 
 	time.Sleep(pulseDelay)
 	trigger.Low()
 
-	var start time.Time
-	for s := echo.Read(); s == rpio.Low; {
-		start = time.Now()
+	for {
+		if echo.Read() == rpio.High {
+			break
+		}
 	}
 
-	for s := echo.Read(); s == rpio.High; {
-		return float64(time.Since(start).Nanoseconds()) / 10000000 * (soundSpeed / 2)
+	startTime := time.Now()
+
+	for {
+		if echo.Read() == rpio.Low {
+			break
+		}
 	}
 
-	return 0
+	duration := time.Since(startTime)
+	return float64(duration.Nanoseconds()) / 10000000 * (soundSpeed / 2)
 }
 
 // ReadValues reads distance values
