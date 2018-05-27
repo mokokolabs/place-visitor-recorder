@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/looplab/fsm"
 	"github.com/stianeikeland/go-rpio"
 	"os"
@@ -33,13 +34,15 @@ var stateEvents = fsm.Events{
 var distanceThresholdStr = os.Getenv("DISTANCE_THRESHOLD")
 var distanceThreshold, err = strconv.ParseFloat(distanceThresholdStr, 64)
 
+const maxDistance = 300 // cm
+
 func main() {
 	sm := fsm.NewFSM("both-idle", stateEvents, fsm.Callbacks{
 		"enter_entered": func(e *fsm.Event) {
-			api.SendEvent("enter")
+			go api.SendEvent("enter")
 		},
 		"enter_exited": func(e *fsm.Event) {
-			api.SendEvent("exit")
+			go api.SendEvent("exit")
 		},
 	})
 
@@ -59,6 +62,17 @@ func main() {
 		default:
 			distanceOuter := outerSensor.Measure()
 			distanceInner := innerSensor.Measure()
+			fmt.Printf("[%v] Outer: %.1fcm, Inner: %.1fcm\n", time.Now().Format(time.StampMilli), distanceOuter, distanceInner)
+
+			if distanceInner == -1 || distanceOuter == -1 {
+				fmt.Println("Error: Measure timed out...")
+				continue
+			}
+
+			if distanceInner > maxDistance || distanceOuter > maxDistance {
+				fmt.Println("Error: Distance too big")
+				continue
+			}
 
 			if distanceOuter <= distanceThreshold {
 				sm.Event("outer-activated")
@@ -72,7 +86,7 @@ func main() {
 				sm.Event("inner-deactivated")
 			}
 
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		case <-quit:
 			return
 		}
