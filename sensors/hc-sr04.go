@@ -1,7 +1,6 @@
 package sensors
 
 import (
-	"context"
 	"time"
 
 	rpio "github.com/stianeikeland/go-rpio"
@@ -32,38 +31,29 @@ func NewHCSR04(echoPin int, triggerPin int) *HCSR04 {
 
 // Measure returns distance in cm
 func (sensor HCSR04) Measure() (value float64) {
-	result := make(chan float64)
+	timeoutTime := time.Now()
+	sensor.trigger.High()
+	time.Sleep(pulseDelay)
+	sensor.trigger.Low()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			result <- -1
-		default:
-			sensor.trigger.High()
-			time.Sleep(pulseDelay)
-			sensor.trigger.Low()
-
-			for {
-				if sensor.echo.Read() == rpio.High {
-					break
-				}
-			}
-
-			startTime := time.Now()
-
-			for {
-				if sensor.echo.Read() == rpio.Low {
-					break
-				}
-			}
-
-			duration := time.Since(startTime)
-			result <- float64(duration.Nanoseconds()) / 10000000 * (soundSpeed / 2)
+	for {
+		if sensor.echo.Read() == rpio.High {
+			break
+		} else if time.Since(timeoutTime) >= 2*time.Second {
+			return -1
 		}
-	}()
+	}
 
-	return <-result
+	startTime := time.Now()
+
+	for {
+		if sensor.echo.Read() == rpio.Low {
+			break
+		} else if time.Since(timeoutTime) >= 2*time.Second {
+			return -1
+		}
+	}
+
+	duration := time.Since(startTime)
+	return float64(duration.Nanoseconds()) / 10000000 * (soundSpeed / 2)
 }
