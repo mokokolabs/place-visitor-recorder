@@ -1,0 +1,4 @@
+github.com/looplab/fsm v0.0.0-20180515091235-f980bdb68a89 h1:xQVP1ArDVHkSnlRqDo92HDHHsLA4mMSlOfo/zB2gqkM=
+github.com/looplab/fsm v0.0.0-20180515091235-f980bdb68a89/go.mod h1:m2VaOfDHxqXBBMgc26m6yUOwkFn8H2AlJDE+jd/uafI=
+github.com/stianeikeland/go-rpio v3.0.1-0.20180606224349-3abdd2207d33+incompatible h1:hhKkGQNzHYcr5GShpZK8O6ME5L/XsZupg8eTGbrtMks=
+github.com/stianeikeland/go-rpio v3.0.1-0.20180606224349-3abdd2207d33+incompatible/go.mod h1:Sh81rdJwD96E2wja2Gd7rrKM+XZ9LrwvN2w4IXrqLR8=
